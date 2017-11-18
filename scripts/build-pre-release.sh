@@ -5,5 +5,14 @@ tar xvf source.tar.gz --strip 1
 export
 ./mvnw clean package -Dmaven.test.skip=true
 
-mv manifest-stage.yml ../../../build/
+cat << EOF > manifest.yml
+---
+applications:
+- name: basic-concourse
+  route: ${APP_NAME}-stage
+  memory: 1G
+  instances: 1
+EOF
+
+mv manifest.yml ../build/
 mv target/*.jar ../build/

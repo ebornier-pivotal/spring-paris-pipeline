@@ -55,7 +55,7 @@ resources:
 - name: pre-release
   type: github-release
   source:
-    user: Pivotal-Field-Engineering
+    user: ((git-user))
     access_token: ((access-token))
     check: true
     repository: ((app-repository))
@@ -66,7 +66,7 @@ resources:
 - name: release
   type: github-release
   source:
-    user: Pivotal-Field-Engineering
+    user: ((git-user))
     access_token: ((access-token))
     check: true
     repository: ((app-repository))
@@ -149,7 +149,7 @@ jobs:
   - task: build
     file: tools/scripts/analyze.yml
 
-- name: deploy-to-development
+- name: deploy-to-test
   serial: true
   public: true # cf does not shows auth. logs so it is ok
   plan:
@@ -163,7 +163,7 @@ jobs:
       <<: *common-params
   - put: cf-test
     params:
-      manifest: build/manifest-dev.yml
+      manifest: build/manifest.yml
       current_app_name: basic-concourse
       path: build/basic-concourse-0.0.1-SNAPSHOT.jar
   - put: slack-alert
@@ -174,7 +174,7 @@ jobs:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
         The application is now available in development at https://basic-concourse.development.cfapps.alex.examples.cf
 
-- name: deploy-to-qa
+- name: deploy-to-stage
   public: true
   serial: true
   plan:
@@ -189,7 +189,7 @@ jobs:
     file: tools/scripts/build-pre-release.yml
   - put: cf-stage
     params:
-      manifest: build/manifest-qa.yml
+      manifest: build/manifest.yml
       current_app_name: basic-concourse
       path: build/basic-concourse-0.0.1-SNAPSHOT.jar
   - put: slack-alert
@@ -215,7 +215,7 @@ jobs:
     file: tools/scripts/build-release.yml
   - put: cf-prod
     params:
-      manifest: build/manifest-prod.yml
+      manifest: build/manifest.yml
       current_app_name: basic-concourse
       path: build/basic-concourse-0.0.1-SNAPSHOT.jar
   - put: slack-alert
