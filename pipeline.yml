@@ -22,54 +22,54 @@ resources:
     uri: ((tools-scripts-url))
     branch: ((tools-branch))
 
-- name: cf-dev
+- name: cf-test
   type: cf
   source:
     api: ((cf-api))
     username: ((cf-username))
     password: ((cf-password))
-    organization: development
-    space: thales-df-workshop
+    organization: ((cf-org))
+    space: test
     skip_cert_check: true
 
-- name: cf-qa
+- name: cf-stage
   type: cf
   source:
-    api: {{cf-api}}
-    username: {{cf-username}}
+    api: ((cf-api))
+    username: ((cf-username))
     password: ((cf-password))
-    organization: qa
-    space: thales-df-workshop
+    organization: ((cf-org))
+    space: stage
     skip_cert_check: true
 
 - name: cf-prod
   type: cf
   source:
-    api: {{cf-api}}
-    username: {{cf-username}}
+    api: ((cf-api))
+    username: ((cf-username))
     password: ((cf-password))
-    organization: production
-    space: thales-df-workshop
+    organization: ((cf-org))
+    space: prod
     skip_cert_check: true
 
-- name: thales-pre-release
+- name: pre-release
   type: github-release
   source:
     user: Pivotal-Field-Engineering
-    access_token: {{access-token}}
+    access_token: ((access-token))
     check: true
-    repository: emea-thales
+    repository: ((app-repository))
     include_source_tarball: true
     include_source_zip: true
     pre_release: true
 
-- name: thales-release
+- name: release
   type: github-release
   source:
     user: Pivotal-Field-Engineering
-    access_token: {{access-token}}
+    access_token: ((access-token))
     check: true
-    repository: emea-thales
+    repository: ((app-repository))
     include_source_tarball: true
     include_source_zip: true
     pre_release: false
@@ -98,7 +98,7 @@ jobs:
   plan:
   - get: repo
   - get: tools
-  - get: thales-pre-release
+  - get: pre-release
     trigger: true
   - task: build
     file: tools/scripts/analyze.yml
@@ -109,7 +109,7 @@ jobs:
   plan:
   - get: repo
   - get: tools
-  - get: thales-release
+  - get: release
     trigger: true
   - task: build
     file: tools/scripts/analyze.yml
@@ -130,7 +130,7 @@ jobs:
   public: true # cf does not shows auth. logs so it is ok
   plan:
   - get: repo
-  - get: thales-pre-release
+  - get: pre-release
     trigger: true
     passed: [ analyze-pre-release ]
   - get: tools
@@ -142,7 +142,7 @@ jobs:
   public: true # cf does not shows auth. logs so it is ok
   plan:
   - get: repo
-  - get: thales-release
+  - get: release
     trigger: true
     passed: [ analyze-release ]
   - get: tools
@@ -159,14 +159,16 @@ jobs:
   - get: tools
   - task: build
     file: tools/scripts/build.yml
-  - put: cf-dev
+    params:
+      <<: *common-params
+  - put: cf-test
     params:
       manifest: build/manifest-dev.yml
       current_app_name: basic-concourse
       path: build/basic-concourse-0.0.1-SNAPSHOT.jar
   - put: slack-alert
     params:
-      channel: '#circle-of-code'
+      channel: '#spring-paris-demo'
       text: |
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
@@ -177,7 +179,7 @@ jobs:
   serial: true
   plan:
   - get: repo
-  - get: thales-pre-release
+  - get: pre-release
     trigger: true
     passed: [ tests-pre-release  ]
     params:
@@ -185,14 +187,14 @@ jobs:
   - get: tools
   - task: build
     file: tools/scripts/build-pre-release.yml
-  - put: cf-qa
+  - put: cf-stage
     params:
       manifest: build/manifest-qa.yml
       current_app_name: basic-concourse
       path: build/basic-concourse-0.0.1-SNAPSHOT.jar
   - put: slack-alert
     params:
-      channel: '#circle-of-code'
+      channel: '#spring-paris-demo'
       text: |
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
@@ -204,7 +206,7 @@ jobs:
   plan:
   - get: repo
   - get: tools
-  - get: thales-release
+  - get: release
     trigger: true
     passed: [ tests-release  ]
     params:
@@ -218,8 +220,12 @@ jobs:
       path: build/basic-concourse-0.0.1-SNAPSHOT.jar
   - put: slack-alert
     params:
-      channel: '#circle-of-code'
+      channel: '#spring-paris-demo'
       text: |
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
         The application is now available in production at https://basic-concourse.production.cfapps.alex.examples.cf
+
+
+common-params: &common-params
+  APP_NAME: ((app-name))
