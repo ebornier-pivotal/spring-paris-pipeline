@@ -164,7 +164,7 @@ jobs:
   - put: cf-test
     params:
       manifest: build/manifest.yml
-      current_app_name: basic-concourse
+      current_app_name: ((app-name))
       path: build/basic-concourse-0.0.1-SNAPSHOT.jar
   - put: slack-alert
     params:
@@ -187,10 +187,12 @@ jobs:
   - get: tools
   - task: build
     file: tools/scripts/build-pre-release.yml
+    params:
+      <<: *common-params
   - put: cf-stage
     params:
       manifest: build/manifest.yml
-      current_app_name: basic-concourse
+      current_app_name: ((app-name))
       path: build/basic-concourse-0.0.1-SNAPSHOT.jar
   - put: slack-alert
     params:
@@ -213,10 +215,12 @@ jobs:
       include_source_tarball: true
   - task: build
     file: tools/scripts/build-release.yml
+    params:
+      <<: *common-params
   - put: cf-prod
     params:
       manifest: build/manifest.yml
-      current_app_name: basic-concourse
+      current_app_name: ((app-name))
       path: build/basic-concourse-0.0.1-SNAPSHOT.jar
   - put: slack-alert
     params:

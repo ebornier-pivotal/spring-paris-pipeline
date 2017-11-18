@@ -9,7 +9,7 @@ cat << EOF > manifest.yml
 ---
 applications:
 - name: ${APP_NAME} 
-  route: ${APP_NAME}-stage
+  host: ${APP_NAME}-stage
   memory: 1G
   instances: 1
 EOF
