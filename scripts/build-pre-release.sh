@@ -15,4 +15,4 @@ applications:
 EOF
 
 mv manifest.yml ../build/
-mv target/*.jar ../build/
+mv `ls target/*jar` ../build/app.jar

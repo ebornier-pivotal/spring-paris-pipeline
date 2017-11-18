@@ -165,7 +165,7 @@ jobs:
     params:
       manifest: build/manifest.yml
       current_app_name: ((app-name))
-      path: build/basic-concourse-0.0.1-SNAPSHOT.jar
+      path: build/app.jar
   - put: slack-alert
     params:
       channel: '#spring-paris-demo'
@@ -193,7 +193,7 @@ jobs:
     params:
       manifest: build/manifest.yml
       current_app_name: ((app-name))
-      path: build/basic-concourse-0.0.1-SNAPSHOT.jar
+      path: build/app.jar
   - put: slack-alert
     params:
       channel: '#spring-paris-demo'
@@ -221,7 +221,7 @@ jobs:
     params:
       manifest: build/manifest.yml
       current_app_name: ((app-name))
-      path: build/basic-concourse-0.0.1-SNAPSHOT.jar
+      path: build/app.jar
   - put: slack-alert
     params:
       channel: '#spring-paris-demo'
