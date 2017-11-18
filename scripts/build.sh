@@ -1,6 +1,6 @@
 #!/bin/bash 
 ls
-cd repo/ 
+cd build/ 
 export
 ./mvnw clean package -Dmaven.test.skip=true 
 mv manifest-dev.yml ../build/ 
