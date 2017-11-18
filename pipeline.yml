@@ -1,0 +1,232 @@
+---
+
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
+
+resources:
+
+- name: repo
+  type: git
+  source:
+    uri: ((app-url))
+    branch: ((app-branch))
+    private_key: ((github-private-key))
+
+- name: tools
+  type: git
+  source:
+    uri: ((tools-scripts-url))
+    branch: ((tools-branch))
+
+- name: cf-dev
+  type: cf
+  source:
+    api: ((cf-api))
+    username: ((cf-username))
+    password: ((cf-password))
+    organization: development
+    space: thales-df-workshop
+    skip_cert_check: true
+
+- name: cf-qa
+  type: cf
+  source:
+    api: {{cf-api}}
+    username: {{cf-username}}
+    password: ((cf-password))
+    organization: qa
+    space: thales-df-workshop
+    skip_cert_check: true
+
+- name: cf-prod
+  type: cf
+  source:
+    api: {{cf-api}}
+    username: {{cf-username}}
+    password: ((cf-password))
+    organization: production
+    space: thales-df-workshop
+    skip_cert_check: true
+
+- name: thales-pre-release
+  type: github-release
+  source:
+    user: Pivotal-Field-Engineering
+    access_token: {{access-token}}
+    check: true
+    repository: emea-thales
+    include_source_tarball: true
+    include_source_zip: true
+    pre_release: true
+
+- name: thales-release
+  type: github-release
+  source:
+    user: Pivotal-Field-Engineering
+    access_token: {{access-token}}
+    check: true
+    repository: emea-thales
+    include_source_tarball: true
+    include_source_zip: true
+    pre_release: false
+
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: https://hooks.slack.com/services/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
+
+
+jobs:
+
+- name: analyze-repo
+  serial: true
+  public: true # cf does not shows auth. logs so it is ok
+  plan:
+  - get: repo
+    trigger: true
+  - task: build
+    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+
+- name: analyze-pre-release
+  serial: true
+  public: true # cf does not shows auth. logs so it is ok
+  plan:
+  - get: repo
+  - get: thales-pre-release
+    trigger: true
+  - task: build
+    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+
+- name: analyze-release
+  serial: true
+  public: true # cf does not shows auth. logs so it is ok
+  plan:
+  - get: repo
+  - get: thales-release
+    trigger: true
+  - task: build
+    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+
+- name: tests-repo
+  serial: true
+  public: true # cf does not shows auth. logs so it is ok
+  plan:
+  - get: repo
+    trigger: true
+    passed: [ analyze-repo ]
+  - task: build
+    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+
+- name: tests-pre-release
+  serial: true
+  public: true # cf does not shows auth. logs so it is ok
+  plan:
+  - get: repo
+  - get: thales-pre-release
+    trigger: true
+    passed: [ analyze-pre-release ]
+  - task: build
+    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+
+- name: tests-release
+  serial: true
+  public: true # cf does not shows auth. logs so it is ok
+  plan:
+  - get: repo
+  - get: thales-release
+    trigger: true
+    passed: [ analyze-release ]
+  - task: build
+    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+
+- name: create-services
+  serial: true
+  public: true # cf does not shows auth. logs so it is ok
+  plan:
+  - get: repo
+    trigger: true
+    passed: [ tests-repo ]
+  - task: create-services
+    file: repo/thales-df-workshops/basic-concourse/ci/create-services.yml
+    params:
+      CF_API: {{cf-api}}
+      CF_USERNAME: {{cf-username}}
+      CF_PASSWORD: ((cf-password))
+
+- name: deploy-to-development
+  serial: true
+  public: true # cf does not shows auth. logs so it is ok
+  plan:
+  - get: repo
+    trigger: true
+    passed: [ create-services ]
+  - get: tools
+    trigger: true
+  - task: build
+    file: tools/scripts/build.yml
+  - put: cf-dev
+    params:
+      manifest: build/manifest-dev.yml
+      current_app_name: basic-concourse
+      path: build/basic-concourse-0.0.1-SNAPSHOT.jar
+  - put: slack-alert
+    params:
+      channel: '#circle-of-code'
+      text: |
+        The build had a result. Check it out at:
+        https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
+        The application is now available in development at https://basic-concourse.development.cfapps.alex.examples.cf
+
+- name: deploy-to-qa
+  public: true
+  serial: true
+  plan:
+  - get: repo
+  - get: thales-pre-release
+    trigger: true
+    passed: [ tests-pre-release  ]
+    params:
+      include_source_tarball: true
+  - task: build
+    file: repo/thales-df-workshops/basic-concourse/ci/build-pre-release.yml
+  - put: cf-qa
+    params:
+      manifest: build/manifest-qa.yml
+      current_app_name: basic-concourse
+      path: build/basic-concourse-0.0.1-SNAPSHOT.jar
+  - put: slack-alert
+    params:
+      channel: '#circle-of-code'
+      text: |
+        The build had a result. Check it out at:
+        https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
+        The application is now available in qa at https://basic-concourse.qa.cfapps.alex.examples.cf
+
+- name: deploy-to-prod
+  public: true
+  serial: true
+  plan:
+  - get: repo
+  - get: thales-release
+    trigger: true
+    passed: [ tests-release  ]
+    params:
+      include_source_tarball: true
+  - task: build
+    file: repo/thales-df-workshops/basic-concourse/ci/build-release.yml
+  - put: cf-prod
+    params:
+      manifest: build/manifest-prod.yml
+      current_app_name: basic-concourse
+      path: build/basic-concourse-0.0.1-SNAPSHOT.jar
+  - put: slack-alert
+    params:
+      channel: '#circle-of-code'
+      text: |
+        The build had a result. Check it out at:
+        https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
+        The application is now available in production at https://basic-concourse.production.cfapps.alex.examples.cf

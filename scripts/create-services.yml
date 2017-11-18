@@ -1,0 +1,13 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: lwieske/cloudfoundrycli
+
+inputs:
+- name: thales-repo
+
+run:
+  path: thales-repo/thales-df-workshops/basic-concourse/ci/create-services.sh

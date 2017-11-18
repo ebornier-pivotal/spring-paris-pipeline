@@ -1,0 +1,17 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: java
+    tag: '8'
+
+inputs:
+- name: thales-repo
+- name: thales-release
+outputs:
+- name: build 
+
+run:
+  path: thales-repo/thales-df-workshops/basic-concourse/ci/build-release.sh 

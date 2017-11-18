@@ -1,0 +1,633 @@
+common-params:
+  _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+  APP_MEMORY_LIMIT: ((app-memory-limit))
+  BUILD_OPTIONS: ((build-options))
+  DOCKER_EMAIL: ((docker-email))
+  DOCKER_PASSWORD: ((docker-password))
+  DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+  DOCKER_REGISTRY_URL: ((docker-registry-url))
+  DOCKER_SERVER_ID: ((docker-server-id))
+  DOCKER_USERNAME: ((docker-username))
+  GIT_EMAIL: ((git-email))
+  GIT_NAME: ((git-name))
+  KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+  M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+  M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+  M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+  MYSQL_PASSWORD: ((mysql-password))
+  MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+  MYSQL_USER: ((mysql-user))
+  PAAS_TYPE: ((paas-type))
+  REPO_WITH_BINARIES: ((repo-with-binaries))
+jobs:
+- name: generate-version
+  plan:
+  - aggregate:
+    - get: tools
+    - get: version
+  - file: tools/concourse/tasks/generate-version/task.yml
+    params:
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+    privileged: true
+    task: generate-version
+  - params:
+      repository: updated-version
+    put: version
+  public: true
+- name: build-and-upload
+  plan:
+  - aggregate:
+    - get: tools
+    - get: repo
+    - get: version
+      passed:
+      - generate-version
+      trigger: true
+  - file: tools/concourse/tasks/build-and-upload/task.yml
+    params:
+      _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+      APP_MEMORY_LIMIT: ((app-memory-limit))
+      BUILD_OPTIONS: ((build-options))
+      DOCKER_EMAIL: ((docker-email))
+      DOCKER_PASSWORD: ((docker-password))
+      DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+      DOCKER_REGISTRY_URL: ((docker-registry-url))
+      DOCKER_SERVER_ID: ((docker-server-id))
+      DOCKER_USERNAME: ((docker-username))
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+      M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+      M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+      M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+      MYSQL_PASSWORD: ((mysql-password))
+      MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+      MYSQL_USER: ((mysql-user))
+      PAAS_TYPE: ((paas-type))
+      REPO_WITH_BINARIES: ((repo-with-binaries))
+    privileged: true
+    task: build-and-upload
+  - params:
+      only_tag: true
+      repository: out
+      tag: out/tag
+    put: repo
+  public: false
+  serial: true
+- name: build-api-compatibility-check
+  plan:
+  - aggregate:
+    - get: tools
+    - get: repo
+    - get: version
+      passed:
+      - build-and-upload
+      trigger: true
+  - file: tools/concourse/task.yml
+    params:
+      _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+      APP_MEMORY_LIMIT: ((app-memory-limit))
+      BUILD_OPTIONS: ((build-options))
+      DOCKER_EMAIL: ((docker-email))
+      DOCKER_PASSWORD: ((docker-password))
+      DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+      DOCKER_REGISTRY_URL: ((docker-registry-url))
+      DOCKER_SERVER_ID: ((docker-server-id))
+      DOCKER_USERNAME: ((docker-username))
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+      M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+      M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+      M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+      MESSAGE: Deploying the built application on test environment
+      MYSQL_PASSWORD: ((mysql-password))
+      MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+      MYSQL_USER: ((mysql-user))
+      PAAS_TYPE: ((paas-type))
+      REPO_WITH_BINARIES: ((repo-with-binaries))
+      SCRIPT_TO_RUN: build_api_compatibility_check.sh
+    privileged: true
+    task: build-api-compatibility-check
+  public: false
+  serial: true
+- name: test-deploy
+  plan:
+  - aggregate:
+    - get: tools
+    - get: repo
+    - get: version
+      passed:
+      - build-api-compatibility-check
+      trigger: true
+  - file: tools/concourse/task.yml
+    params:
+      _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+      APP_MEMORY_LIMIT: ((app-memory-limit))
+      BUILD_OPTIONS: ((build-options))
+      DOCKER_EMAIL: ((docker-email))
+      DOCKER_PASSWORD: ((docker-password))
+      DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+      DOCKER_REGISTRY_URL: ((docker-registry-url))
+      DOCKER_SERVER_ID: ((docker-server-id))
+      DOCKER_USERNAME: ((docker-username))
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+      M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+      M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+      M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+      MESSAGE: Deploying the built application on test environment
+      MYSQL_PASSWORD: ((mysql-password))
+      MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+      MYSQL_USER: ((mysql-user))
+      PAAS_HOSTNAME_UUID: ((paas-hostname-uuid))
+      PAAS_TEST_API_URL: ((paas-test-api-url))
+      PAAS_TEST_CA: ((paas-test-ca))
+      PAAS_TEST_CLIENT_TOKEN: ((paas-test-client-token))
+      PAAS_TEST_CLUSTER_NAME: ((paas-test-cluster-name))
+      PAAS_TEST_CLUSTER_USERNAME: ((paas-test-cluster-username))
+      PAAS_TEST_NAMESPACE: ((paas-test-namespace))
+      PAAS_TEST_ORG: ((paas-test-org))
+      PAAS_TEST_PASSWORD: ((paas-test-password))
+      PAAS_TEST_SPACE: ((paas-test-space))
+      PAAS_TEST_SYSTEM_NAME: ((paas-test-system-name))
+      PAAS_TEST_USERNAME: ((paas-test-username))
+      PAAS_TYPE: ((paas-type))
+      REPO_WITH_BINARIES: ((repo-with-binaries))
+      SCRIPT_TO_RUN: test_deploy.sh
+    privileged: true
+    task: test-deploy
+  public: false
+  serial: true
+- name: test-smoke
+  plan:
+  - aggregate:
+    - get: tools
+    - get: repo
+    - get: version
+      passed:
+      - test-deploy
+      trigger: true
+  - file: tools/concourse/task.yml
+    params:
+      _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+      APP_MEMORY_LIMIT: ((app-memory-limit))
+      BUILD_OPTIONS: ((build-options))
+      DOCKER_EMAIL: ((docker-email))
+      DOCKER_PASSWORD: ((docker-password))
+      DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+      DOCKER_REGISTRY_URL: ((docker-registry-url))
+      DOCKER_SERVER_ID: ((docker-server-id))
+      DOCKER_USERNAME: ((docker-username))
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+      M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+      M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+      M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+      MESSAGE: Testing the built application on test environment
+      MYSQL_PASSWORD: ((mysql-password))
+      MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+      MYSQL_USER: ((mysql-user))
+      PAAS_TEST_API_URL: ((paas-test-api-url))
+      PAAS_TEST_CA: ((paas-test-ca))
+      PAAS_TEST_CLIENT_TOKEN: ((paas-test-client-token))
+      PAAS_TEST_CLUSTER_NAME: ((paas-test-cluster-name))
+      PAAS_TEST_CLUSTER_USERNAME: ((paas-test-cluster-username))
+      PAAS_TEST_NAMESPACE: ((paas-test-namespace))
+      PAAS_TEST_ORG: ((paas-test-org))
+      PAAS_TEST_PASSWORD: ((paas-test-password))
+      PAAS_TEST_SPACE: ((paas-test-space))
+      PAAS_TEST_SYSTEM_NAME: ((paas-test-system-name))
+      PAAS_TEST_USERNAME: ((paas-test-username))
+      PAAS_TYPE: ((paas-type))
+      REPO_WITH_BINARIES: ((repo-with-binaries))
+      SCRIPT_TO_RUN: test_smoke.sh
+    privileged: true
+    task: test-smoke
+  public: false
+  serial: true
+- name: test-rollback-deploy
+  plan:
+  - aggregate:
+    - get: tools
+    - get: repo
+    - get: version
+      passed:
+      - test-smoke
+      trigger: true
+  - file: tools/concourse/task.yml
+    params:
+      _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+      APP_MEMORY_LIMIT: ((app-memory-limit))
+      BUILD_OPTIONS: ((build-options))
+      DOCKER_EMAIL: ((docker-email))
+      DOCKER_PASSWORD: ((docker-password))
+      DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+      DOCKER_REGISTRY_URL: ((docker-registry-url))
+      DOCKER_SERVER_ID: ((docker-server-id))
+      DOCKER_USERNAME: ((docker-username))
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+      M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+      M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+      M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+      MESSAGE: Deploying the built application on test environment
+      MYSQL_PASSWORD: ((mysql-password))
+      MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+      MYSQL_USER: ((mysql-user))
+      PAAS_HOSTNAME_UUID: ((paas-hostname-uuid))
+      PAAS_TEST_API_URL: ((paas-test-api-url))
+      PAAS_TEST_CA: ((paas-test-ca))
+      PAAS_TEST_CLIENT_TOKEN: ((paas-test-client-token))
+      PAAS_TEST_CLUSTER_NAME: ((paas-test-cluster-name))
+      PAAS_TEST_CLUSTER_USERNAME: ((paas-test-cluster-username))
+      PAAS_TEST_NAMESPACE: ((paas-test-namespace))
+      PAAS_TEST_ORG: ((paas-test-org))
+      PAAS_TEST_PASSWORD: ((paas-test-password))
+      PAAS_TEST_SPACE: ((paas-test-space))
+      PAAS_TEST_SYSTEM_NAME: ((paas-test-system-name))
+      PAAS_TEST_USERNAME: ((paas-test-username))
+      PAAS_TYPE: ((paas-type))
+      REPO_WITH_BINARIES: ((repo-with-binaries))
+      SCRIPT_TO_RUN: test_rollback_deploy.sh
+    privileged: true
+    task: test-rollback-deploy
+  public: false
+  serial: true
+- name: test-rollback-smoke
+  plan:
+  - aggregate:
+    - get: tools
+    - get: repo
+    - get: version
+      passed:
+      - test-rollback-deploy
+      trigger: true
+  - file: tools/concourse/task.yml
+    params:
+      _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+      APP_MEMORY_LIMIT: ((app-memory-limit))
+      BUILD_OPTIONS: ((build-options))
+      DOCKER_EMAIL: ((docker-email))
+      DOCKER_PASSWORD: ((docker-password))
+      DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+      DOCKER_REGISTRY_URL: ((docker-registry-url))
+      DOCKER_SERVER_ID: ((docker-server-id))
+      DOCKER_USERNAME: ((docker-username))
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+      M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+      M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+      M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+      MESSAGE: Testing the rolled back built application on test environment
+      MYSQL_PASSWORD: ((mysql-password))
+      MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+      MYSQL_USER: ((mysql-user))
+      PAAS_TEST_API_URL: ((paas-test-api-url))
+      PAAS_TEST_CA: ((paas-test-ca))
+      PAAS_TEST_CLIENT_TOKEN: ((paas-test-client-token))
+      PAAS_TEST_CLUSTER_NAME: ((paas-test-cluster-name))
+      PAAS_TEST_CLUSTER_USERNAME: ((paas-test-cluster-username))
+      PAAS_TEST_NAMESPACE: ((paas-test-namespace))
+      PAAS_TEST_ORG: ((paas-test-org))
+      PAAS_TEST_PASSWORD: ((paas-test-password))
+      PAAS_TEST_SPACE: ((paas-test-space))
+      PAAS_TEST_SYSTEM_NAME: ((paas-test-system-name))
+      PAAS_TEST_USERNAME: ((paas-test-username))
+      PAAS_TYPE: ((paas-type))
+      REPO_WITH_BINARIES: ((repo-with-binaries))
+      SCRIPT_TO_RUN: test_rollback_smoke.sh
+    privileged: true
+    task: test-rollback-smoke
+  public: false
+  serial: true
+- name: stage-deploy
+  plan:
+  - aggregate:
+    - get: tools
+    - get: repo
+    - get: version
+      passed:
+      - test-rollback-smoke
+      trigger: false
+  - file: tools/concourse/task.yml
+    params:
+      _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+      APP_MEMORY_LIMIT: ((app-memory-limit))
+      BUILD_OPTIONS: ((build-options))
+      DOCKER_EMAIL: ((docker-email))
+      DOCKER_PASSWORD: ((docker-password))
+      DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+      DOCKER_REGISTRY_URL: ((docker-registry-url))
+      DOCKER_SERVER_ID: ((docker-server-id))
+      DOCKER_USERNAME: ((docker-username))
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+      M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+      M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+      M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+      MESSAGE: Deploying the built application on test environment
+      MYSQL_PASSWORD: ((mysql-password))
+      MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+      MYSQL_USER: ((mysql-user))
+      PAAS_HOSTNAME_UUID: ((paas-hostname-uuid))
+      PAAS_STAGE_API_URL: ((paas-stage-api-url))
+      PAAS_STAGE_CA: ((paas-stage-ca))
+      PAAS_STAGE_CLIENT_TOKEN: ((paas-stage-client-token))
+      PAAS_STAGE_CLUSTER_NAME: ((paas-stage-cluster-name))
+      PAAS_STAGE_CLUSTER_USERNAME: ((paas-stage-cluster-username))
+      PAAS_STAGE_NAMESPACE: ((paas-stage-namespace))
+      PAAS_STAGE_ORG: ((paas-stage-org))
+      PAAS_STAGE_PASSWORD: ((paas-stage-password))
+      PAAS_STAGE_SPACE: ((paas-stage-space))
+      PAAS_STAGE_SYSTEM_NAME: ((paas-stage-system-name))
+      PAAS_STAGE_USERNAME: ((paas-stage-username))
+      PAAS_TYPE: ((paas-type))
+      REPO_WITH_BINARIES: ((repo-with-binaries))
+      SCRIPT_TO_RUN: stage_deploy.sh
+    privileged: true
+    task: stage-deploy
+  public: false
+  serial: true
+- name: stage-e2e
+  plan:
+  - aggregate:
+    - get: tools
+    - get: repo
+    - get: version
+      passed:
+      - stage-deploy
+      trigger: true
+  - file: tools/concourse/task.yml
+    params:
+      _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+      APP_MEMORY_LIMIT: ((app-memory-limit))
+      BUILD_OPTIONS: ((build-options))
+      DOCKER_EMAIL: ((docker-email))
+      DOCKER_PASSWORD: ((docker-password))
+      DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+      DOCKER_REGISTRY_URL: ((docker-registry-url))
+      DOCKER_SERVER_ID: ((docker-server-id))
+      DOCKER_USERNAME: ((docker-username))
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+      M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+      M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+      M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+      MESSAGE: Testing the built application on stage environment
+      MYSQL_PASSWORD: ((mysql-password))
+      MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+      MYSQL_USER: ((mysql-user))
+      PAAS_STAGE_API_URL: ((paas-stage-api-url))
+      PAAS_STAGE_CA: ((paas-stage-ca))
+      PAAS_STAGE_CLIENT_TOKEN: ((paas-stage-client-token))
+      PAAS_STAGE_CLUSTER_NAME: ((paas-stage-cluster-name))
+      PAAS_STAGE_CLUSTER_USERNAME: ((paas-stage-cluster-username))
+      PAAS_STAGE_NAMESPACE: ((paas-stage-namespace))
+      PAAS_STAGE_ORG: ((paas-stage-org))
+      PAAS_STAGE_PASSWORD: ((paas-stage-password))
+      PAAS_STAGE_SPACE: ((paas-stage-space))
+      PAAS_STAGE_SYSTEM_NAME: ((paas-stage-system-name))
+      PAAS_STAGE_USERNAME: ((paas-stage-username))
+      PAAS_TYPE: ((paas-type))
+      REPO_WITH_BINARIES: ((repo-with-binaries))
+      SCRIPT_TO_RUN: stage_e2e.sh
+    privileged: true
+    task: stage-smoke
+  public: false
+  serial: true
+- name: prod-deploy
+  plan:
+  - aggregate:
+    - get: tools
+    - get: repo
+    - get: version
+      passed:
+      - stage-e2e
+      trigger: true
+  - file: tools/concourse/tasks/prod-deploy/task.yml
+    params:
+      _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+      APP_MEMORY_LIMIT: ((app-memory-limit))
+      BUILD_OPTIONS: ((build-options))
+      DOCKER_EMAIL: ((docker-email))
+      DOCKER_PASSWORD: ((docker-password))
+      DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+      DOCKER_REGISTRY_URL: ((docker-registry-url))
+      DOCKER_SERVER_ID: ((docker-server-id))
+      DOCKER_USERNAME: ((docker-username))
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+      M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+      M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+      M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+      MYSQL_PASSWORD: ((mysql-password))
+      MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+      MYSQL_USER: ((mysql-user))
+      PAAS_HOSTNAME_UUID: ((paas-hostname-uuid))
+      PAAS_PROD_API_URL: ((paas-prod-api-url))
+      PAAS_PROD_CA: ((paas-prod-ca))
+      PAAS_PROD_CLIENT_TOKEN: ((paas-prod-client-token))
+      PAAS_PROD_CLUSTER_NAME: ((paas-prod-cluster-name))
+      PAAS_PROD_CLUSTER_USERNAME: ((paas-prod-cluster-username))
+      PAAS_PROD_NAMESPACE: ((paas-prod-namespace))
+      PAAS_PROD_ORG: ((paas-prod-org))
+      PAAS_PROD_PASSWORD: ((paas-prod-password))
+      PAAS_PROD_SPACE: ((paas-prod-space))
+      PAAS_PROD_SYSTEM_NAME: ((paas-prod-system-name))
+      PAAS_PROD_USERNAME: ((paas-prod-username))
+      PAAS_TYPE: ((paas-type))
+      REPO_WITH_BINARIES: ((repo-with-binaries))
+    privileged: true
+    task: prod-deploy
+  - params:
+      only_tag: true
+      repository: out
+      tag: out/tag
+    put: repo
+  public: false
+  serial: true
+- name: prod-rollback
+  plan:
+  - aggregate:
+    - get: tools
+    - get: repo
+    - get: version
+      passed:
+      - prod-deploy
+      trigger: true
+  - file: tools/concourse/task.yml
+    params:
+      _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+      APP_MEMORY_LIMIT: ((app-memory-limit))
+      BUILD_OPTIONS: ((build-options))
+      DOCKER_EMAIL: ((docker-email))
+      DOCKER_PASSWORD: ((docker-password))
+      DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+      DOCKER_REGISTRY_URL: ((docker-registry-url))
+      DOCKER_SERVER_ID: ((docker-server-id))
+      DOCKER_USERNAME: ((docker-username))
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+      M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+      M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+      M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+      MESSAGE: Rolling back to previous instance
+      MYSQL_PASSWORD: ((mysql-password))
+      MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+      MYSQL_USER: ((mysql-user))
+      PAAS_HOSTNAME_UUID: ((paas-hostname-uuid))
+      PAAS_PROD_API_URL: ((paas-prod-api-url))
+      PAAS_PROD_CA: ((paas-prod-ca))
+      PAAS_PROD_CLIENT_TOKEN: ((paas-prod-client-token))
+      PAAS_PROD_CLUSTER_NAME: ((paas-prod-cluster-name))
+      PAAS_PROD_CLUSTER_USERNAME: ((paas-prod-cluster-username))
+      PAAS_PROD_NAMESPACE: ((paas-prod-namespace))
+      PAAS_PROD_ORG: ((paas-prod-org))
+      PAAS_PROD_PASSWORD: ((paas-prod-password))
+      PAAS_PROD_SPACE: ((paas-prod-space))
+      PAAS_PROD_SYSTEM_NAME: ((paas-prod-system-name))
+      PAAS_PROD_USERNAME: ((paas-prod-username))
+      PAAS_TYPE: ((paas-type))
+      REPO_WITH_BINARIES: ((repo-with-binaries))
+      SCRIPT_TO_RUN: prod_rollback.sh
+    privileged: true
+    task: prod-rollback
+  public: false
+  serial: true
+- name: prod-complete
+  plan:
+  - aggregate:
+    - get: tools
+    - get: repo
+    - get: version
+      passed:
+      - prod-deploy
+      trigger: true
+  - file: tools/concourse/task.yml
+    params:
+      _JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom
+      APP_MEMORY_LIMIT: ((app-memory-limit))
+      BUILD_OPTIONS: ((build-options))
+      DOCKER_EMAIL: ((docker-email))
+      DOCKER_PASSWORD: ((docker-password))
+      DOCKER_REGISTRY_ORGANIZATION: ((docker-registry-organization))
+      DOCKER_REGISTRY_URL: ((docker-registry-url))
+      DOCKER_SERVER_ID: ((docker-server-id))
+      DOCKER_USERNAME: ((docker-username))
+      GIT_EMAIL: ((git-email))
+      GIT_NAME: ((git-name))
+      KUBERNETES-MINIKUBE: ((kubernetes-minikube))
+      M2_SETTINGS_REPO_ID: ((m2-settings-repo-id))
+      M2_SETTINGS_REPO_PASSWORD: ((m2-settings-repo-password))
+      M2_SETTINGS_REPO_USERNAME: ((m2-settings-repo-username))
+      MESSAGE: Completing the switch over
+      MYSQL_PASSWORD: ((mysql-password))
+      MYSQL_ROOT_PASSWORD: ((mysql-root-password))
+      MYSQL_USER: ((mysql-user))
+      PAAS_PROD_API_URL: ((paas-prod-api-url))
+      PAAS_PROD_CA: ((paas-prod-ca))
+      PAAS_PROD_CLIENT_TOKEN: ((paas-prod-client-token))
+      PAAS_PROD_CLUSTER_NAME: ((paas-prod-cluster-name))
+      PAAS_PROD_CLUSTER_USERNAME: ((paas-prod-cluster-username))
+      PAAS_PROD_NAMESPACE: ((paas-prod-namespace))
+      PAAS_PROD_ORG: ((paas-prod-org))
+      PAAS_PROD_PASSWORD: ((paas-prod-password))
+      PAAS_PROD_SPACE: ((paas-prod-space))
+      PAAS_PROD_SYSTEM_NAME: ((paas-prod-system-name))
+      PAAS_PROD_USERNAME: ((paas-prod-username))
+      PAAS_TYPE: ((paas-type))
+      REPO_WITH_BINARIES: ((repo-with-binaries))
+      SCRIPT_TO_RUN: prod_complete.sh
+    privileged: true
+    task: prod-complete
+  public: false
+  serial: true
+- name: notify-update-available
+  plan:
+  - get: tile
+    params:
+      globs: []
+    trigger: true
+  - params:
+      channel: '#spring-paris-demo'
+      text: '@here - The new app is available in prod'
+    put: slack-alert
+paas-prod-params:
+  PAAS_PROD_API_URL: ((paas-prod-api-url))
+  PAAS_PROD_CA: ((paas-prod-ca))
+  PAAS_PROD_CLIENT_TOKEN: ((paas-prod-client-token))
+  PAAS_PROD_CLUSTER_NAME: ((paas-prod-cluster-name))
+  PAAS_PROD_CLUSTER_USERNAME: ((paas-prod-cluster-username))
+  PAAS_PROD_NAMESPACE: ((paas-prod-namespace))
+  PAAS_PROD_ORG: ((paas-prod-org))
+  PAAS_PROD_PASSWORD: ((paas-prod-password))
+  PAAS_PROD_SPACE: ((paas-prod-space))
+  PAAS_PROD_SYSTEM_NAME: ((paas-prod-system-name))
+  PAAS_PROD_USERNAME: ((paas-prod-username))
+paas-stage-params:
+  PAAS_STAGE_API_URL: ((paas-stage-api-url))
+  PAAS_STAGE_CA: ((paas-stage-ca))
+  PAAS_STAGE_CLIENT_TOKEN: ((paas-stage-client-token))
+  PAAS_STAGE_CLUSTER_NAME: ((paas-stage-cluster-name))
+  PAAS_STAGE_CLUSTER_USERNAME: ((paas-stage-cluster-username))
+  PAAS_STAGE_NAMESPACE: ((paas-stage-namespace))
+  PAAS_STAGE_ORG: ((paas-stage-org))
+  PAAS_STAGE_PASSWORD: ((paas-stage-password))
+  PAAS_STAGE_SPACE: ((paas-stage-space))
+  PAAS_STAGE_SYSTEM_NAME: ((paas-stage-system-name))
+  PAAS_STAGE_USERNAME: ((paas-stage-username))
+paas-test-params:
+  PAAS_TEST_API_URL: ((paas-test-api-url))
+  PAAS_TEST_CA: ((paas-test-ca))
+  PAAS_TEST_CLIENT_TOKEN: ((paas-test-client-token))
+  PAAS_TEST_CLUSTER_NAME: ((paas-test-cluster-name))
+  PAAS_TEST_CLUSTER_USERNAME: ((paas-test-cluster-username))
+  PAAS_TEST_NAMESPACE: ((paas-test-namespace))
+  PAAS_TEST_ORG: ((paas-test-org))
+  PAAS_TEST_PASSWORD: ((paas-test-password))
+  PAAS_TEST_SPACE: ((paas-test-space))
+  PAAS_TEST_SYSTEM_NAME: ((paas-test-system-name))
+  PAAS_TEST_USERNAME: ((paas-test-username))
+resource_types:
+- name: slack-notification
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
+  type: docker-image
+- name: pivnet
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+  type: docker-image
+resources:
+- name: repo
+  source:
+    branch: ((app-branch))
+    private_key: ((github-private-key))
+    uri: ((app-url))
+  type: git
+- name: version
+  source:
+    branch: master
+    private_key: ((github-private-key))
+    uri: ((app-url))
+  type: git
+- name: tools
+  source:
+    branch: ((tools-branch))
+    uri: ((tools-scripts-url))
+  type: git
+- name: slack-alert
+  source:
+    url: https://hooks.slack.com/services/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
+  type: slack-notification
