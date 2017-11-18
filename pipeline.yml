@@ -149,28 +149,13 @@ jobs:
   - task: build
     file: tools/scripts/analyze.yml
 
-- name: create-services
-  serial: true
-  public: true # cf does not shows auth. logs so it is ok
-  plan:
-  - get: repo
-    trigger: true
-    passed: [ tests-repo ]
-  - get: tools
-  - task: create-services
-    file: tools/scripts/create-services.yml
-    params:
-      CF_API: {{cf-api}}
-      CF_USERNAME: {{cf-username}}
-      CF_PASSWORD: ((cf-password))
-
 - name: deploy-to-development
   serial: true
   public: true # cf does not shows auth. logs so it is ok
   plan:
   - get: repo
     trigger: true
-    passed: [ create-services ]
+    passed: [ tests-repo ]
   - get: tools
   - task: build
     file: tools/scripts/build.yml

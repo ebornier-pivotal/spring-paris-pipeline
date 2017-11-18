@@ -1,4 +1,5 @@
 #!/bin/bash 
+ls
 cd repo/ 
 export
 ./mvnw clean package -Dmaven.test.skip=true 
