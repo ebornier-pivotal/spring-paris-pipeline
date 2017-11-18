@@ -8,7 +8,7 @@ export
 cat << EOF > manifest.yml
 ---
 applications:
-- name: basic-concourse
+- name: ${APP_NAME} 
   route: ${APP_NAME}-test
   memory: 1G
   instances: 1
