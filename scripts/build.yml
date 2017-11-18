@@ -8,9 +8,9 @@ image_resource:
     tag: '8'
 
 inputs:
-- name: thales-repo
+- name: tools 
 outputs:
 - name: build 
 
 run:
-  path: thales-repo/thales-df-workshops/basic-concourse/ci/build.sh 
+  path: tools/scripts/build.sh 

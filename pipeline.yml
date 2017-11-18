@@ -88,28 +88,31 @@ jobs:
   plan:
   - get: repo
     trigger: true
+  - get: tools
   - task: build
-    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+    file: tools/scripts/analyze.yml
 
 - name: analyze-pre-release
   serial: true
   public: true # cf does not shows auth. logs so it is ok
   plan:
   - get: repo
+  - get: tools
   - get: thales-pre-release
     trigger: true
   - task: build
-    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+    file: tools/scripts/analyze.yml
 
 - name: analyze-release
   serial: true
   public: true # cf does not shows auth. logs so it is ok
   plan:
   - get: repo
+  - get: tools
   - get: thales-release
     trigger: true
   - task: build
-    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+    file: tools/scripts/analyze.yml
 
 - name: tests-repo
   serial: true
@@ -118,8 +121,9 @@ jobs:
   - get: repo
     trigger: true
     passed: [ analyze-repo ]
+  - get: tools
   - task: build
-    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+    file: tools/scripts/analyze.yml
 
 - name: tests-pre-release
   serial: true
@@ -129,8 +133,9 @@ jobs:
   - get: thales-pre-release
     trigger: true
     passed: [ analyze-pre-release ]
+  - get: tools
   - task: build
-    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+    file: tools/scripts/analyze.yml
 
 - name: tests-release
   serial: true
@@ -140,8 +145,9 @@ jobs:
   - get: thales-release
     trigger: true
     passed: [ analyze-release ]
+  - get: tools
   - task: build
-    file: repo/thales-df-workshops/basic-concourse/ci/analyze.yml
+    file: tools/scripts/analyze.yml
 
 - name: create-services
   serial: true
@@ -150,8 +156,9 @@ jobs:
   - get: repo
     trigger: true
     passed: [ tests-repo ]
+  - get: tools
   - task: create-services
-    file: repo/thales-df-workshops/basic-concourse/ci/create-services.yml
+    file: tools/scripts/create-services.yml
     params:
       CF_API: {{cf-api}}
       CF_USERNAME: {{cf-username}}
@@ -165,7 +172,6 @@ jobs:
     trigger: true
     passed: [ create-services ]
   - get: tools
-    trigger: true
   - task: build
     file: tools/scripts/build.yml
   - put: cf-dev
@@ -191,8 +197,9 @@ jobs:
     passed: [ tests-pre-release  ]
     params:
       include_source_tarball: true
+  - get: tools
   - task: build
-    file: repo/thales-df-workshops/basic-concourse/ci/build-pre-release.yml
+    file: tools/scripts/build-pre-release.yml
   - put: cf-qa
     params:
       manifest: build/manifest-qa.yml
@@ -211,13 +218,14 @@ jobs:
   serial: true
   plan:
   - get: repo
+  - get: tools
   - get: thales-release
     trigger: true
     passed: [ tests-release  ]
     params:
       include_source_tarball: true
   - task: build
-    file: repo/thales-df-workshops/basic-concourse/ci/build-release.yml
+    file: tools/scripts/build-release.yml
   - put: cf-prod
     params:
       manifest: build/manifest-prod.yml
