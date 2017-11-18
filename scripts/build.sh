@@ -3,7 +3,7 @@ ls
 find . 
 cd repo/ 
 export
-./mvnw clean package -Dmaven.test.skip=true 
+mvn clean package -Dmaven.test.skip=true 
 
 cat << EOF > manifest.yml
 ---
