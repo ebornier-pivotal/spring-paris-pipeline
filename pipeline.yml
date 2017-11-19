@@ -91,32 +91,6 @@ jobs:
   - get: tools
   - task: build
     file: tools/scripts/analyze.yml
-  - task: generate-slack-message
-    config:
-      platform: linux
-      image_resource:
-        type: docker-image
-        source:
-          repository: java
-          tag: 8
-      outputs:
-        - name: message
-      run:
-        path: echo
-        args:
-          - 'toto'
-          - '>'
-          - 'message/message.txt'
-  - put: slack-alert
-    params:
-      <<: *common-params
-      channel: '#spring-paris-demo'
-      BUILD_ID: "TOTO"
-      text: |
-        TEST- The build had a result. Check it out at:
-        https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
-        The application is now available in development at https://$APP_NAME.development.cfapps.alex.examples.cf
-
 
 - name: analyze-pre-release
   serial: true
@@ -204,13 +178,11 @@ jobs:
         path: "echo toto > /generate-slack-message/message.txt"
   - put: slack-alert
     params:
-      <<: *common-params
       channel: '#spring-paris-demo'
-      BUILD_ID: "TOTO"
       text: |
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
-        The application is now available in development at https://$APP_NAME.development.cfapps.alex.examples.cf
+        The application is now available in Test
 
 - name: deploy-to-stage
   public: true
@@ -248,7 +220,7 @@ jobs:
       text: |
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
-        The application is now available in qa at https://basic-concourse.qa.cfapps.alex.examples.cf
+        The application is now available in Stage
 
 - name: deploy-to-prod
   public: true
@@ -276,7 +248,7 @@ jobs:
       text: |
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
-        The application is now available in production at https://basic-concourse.production.cfapps.alex.examples.cf
+        The application is now available in Prod
 
 
 common-params: &common-params
