@@ -7,7 +7,7 @@ image_resource:
     repository: lwieske/cloudfoundrycli
 
 inputs:
-- name: thales-repo
+- name: tools
 
 run:
-  path: thales-repo/thales-df-workshops/basic-concourse/ci/create-services.sh
+  path: tools/scripts/create-services.sh

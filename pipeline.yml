@@ -233,6 +233,23 @@ jobs:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
         The application is now available in Prod - $BUILD_JOB_NAME
 
+- name: create-metrics-to-prod
+  public: true
+  serial: true
+  plan:
+  - get: tools
+    trigger: true
+    passed: [  deploy-((app-name))-to-prod  ]
+    params:
+      include_source_tarball: true
+  - task: build
+    file: tools/scripts/create-services.yml
+    params:
+      <<: *common-params
 
 common-params: &common-params
   APP_NAME: ((app-name))
+  CF_USER: ((cf-username))
+  CF_API: ((cf-api))
+  CF_ORG: ((cf-org))
+  CF_PASSWORD: ((cf-password))
