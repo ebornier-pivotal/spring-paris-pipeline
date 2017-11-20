@@ -1,4 +1,5 @@
 #!/bin/bash
+export
 cf login -u $CF_USERNAME -p $CF_PASSWORD -a $CF_API -o prod -s $CF_ORG --skip-ssl-validation
 
 cf target -o prod 

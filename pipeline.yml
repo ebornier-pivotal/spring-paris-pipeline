@@ -82,7 +82,7 @@ resources:
 
 jobs:
 
-- name: analyze-repo
+- name: analyze-source-code
   serial: true
   public: true # cf does not shows auth. logs so it is ok
   plan:
@@ -92,59 +92,23 @@ jobs:
   - task: build
     file: tools/scripts/analyze.yml
 
-- name: analyze-pre-release
+- name: integration-tests
   serial: true
   public: true # cf does not shows auth. logs so it is ok
   plan:
   - get: repo
+    trigger: true
+    passed: [ analyze-source-code ]
   - get: tools
+  - task: build
+    file: tools/scripts/analyze.yml
+
+- name: end-to-end-tests
+  serial: true
+  public: true # cf does not shows auth. logs so it is ok
+  plan:
   - get: pre-release
     trigger: true
-  - task: build
-    file: tools/scripts/analyze.yml
-
-- name: analyze-release
-  serial: true
-  public: true # cf does not shows auth. logs so it is ok
-  plan:
-  - get: repo
-  - get: tools
-  - get: release
-    trigger: true
-  - task: build
-    file: tools/scripts/analyze.yml
-
-- name: tests-repo
-  serial: true
-  public: true # cf does not shows auth. logs so it is ok
-  plan:
-  - get: repo
-    trigger: true
-    passed: [ analyze-repo ]
-  - get: tools
-  - task: build
-    file: tools/scripts/analyze.yml
-
-- name: tests-pre-release
-  serial: true
-  public: true # cf does not shows auth. logs so it is ok
-  plan:
-  - get: repo
-  - get: pre-release
-    trigger: true
-    passed: [ analyze-pre-release ]
-  - get: tools
-  - task: build
-    file: tools/scripts/analyze.yml
-
-- name: tests-release
-  serial: true
-  public: true # cf does not shows auth. logs so it is ok
-  plan:
-  - get: repo
-  - get: release
-    trigger: true
-    passed: [ analyze-release ]
   - get: tools
   - task: build
     file: tools/scripts/analyze.yml
@@ -155,7 +119,7 @@ jobs:
   plan:
   - get: repo
     trigger: true
-    passed: [ tests-repo ]
+    passed: [ integration-tests ]
   - get: tools
   - task: build
     file: tools/scripts/build.yml
@@ -179,10 +143,9 @@ jobs:
   public: true
   serial: true
   plan:
-  - get: repo
   - get: pre-release
     trigger: true
-    passed: [ tests-pre-release  ]
+    passed: [ end-to-end-tests  ]
     params:
       include_source_tarball: true
   - get: tools
@@ -208,11 +171,9 @@ jobs:
   public: true
   serial: true
   plan:
-  - get: repo
   - get: tools
   - get: release
     trigger: true
-    passed: [ tests-release  ]
     params:
       include_source_tarball: true
   - task: build
@@ -233,7 +194,7 @@ jobs:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
         The application is now available in Prod - $BUILD_JOB_NAME
 
-- name: create-metrics-to-prod
+- name: create-metrics-forwarder-prod
   public: true
   serial: true
   plan:
