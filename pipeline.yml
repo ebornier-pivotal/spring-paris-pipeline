@@ -103,17 +103,7 @@ jobs:
   - task: build
     file: tools/scripts/analyze.yml
 
-- name: end-to-end-tests
-  serial: true
-  public: true # cf does not shows auth. logs so it is ok
-  plan:
-  - get: pre-release
-    trigger: true
-  - get: tools
-  - task: build
-    file: tools/scripts/analyze.yml
-
-- name: deploy-((app-name))-to-test
+- name: deploy-((cf-app-name))-to-test
   serial: true
   public: true # cf does not shows auth. logs so it is ok
   plan:
@@ -128,24 +118,23 @@ jobs:
   - put: cf-test
     params:
       manifest: build/manifest.yml
-      current_app_name: ((app-name))
+      current_app_name: ((cf-app-name))
       path: build/app.jar
   - put: slack-alert
     params:
       channel: '#spring-paris-demo'
       text: |
-        ***************************************
+        ****************TEST***********************
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
         The application is now available in Test - $BUILD_JOB_NAME
-
-- name: deploy-((app-name))-to-stage
+        
+- name: deploy-((cf-app-name))-to-stage
   public: true
   serial: true
   plan:
   - get: pre-release
     trigger: true
-    passed: [ end-to-end-tests  ]
     params:
       include_source_tarball: true
   - get: tools
@@ -156,18 +145,30 @@ jobs:
   - put: cf-stage
     params:
       manifest: build/manifest.yml
-      current_app_name: ((app-name))
+      current_app_name: ((cf-app-name))
       path: build/app.jar
   - put: slack-alert
     params:
       channel: '#spring-paris-demo'
       text: |
-        ***************************************
+        ***************STAGE************************
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
         The application is now available in Stage - $BUILD_JOB_NAME
 
-- name: deploy-((app-name))-to-prod
+- name: end-to-end-tests
+  serial: true
+  public: true # cf does not shows auth. logs so it is ok
+  plan:
+  - get: pre-release
+    trigger: true
+    passed: [ deploy-((cf-app-name))-to-stage  ]
+  - get: tools
+  - task: build
+    file: tools/scripts/analyze.yml
+
+
+- name: deploy-((cf-app-name))-to-prod
   public: true
   serial: true
   plan:
@@ -184,13 +185,13 @@ jobs:
   - put: cf-prod
     params:
       manifest: build/manifest.yml
-      current_app_name: ((app-name))
+      current_app_name: ((cf-app-name))
       path: build/app.jar
   - put: slack-alert
     params:
       channel: '#spring-paris-demo'
       text: |
-        ***************************************
+        *****************PROD**********************
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
         The application is now available in Prod - $BUILD_JOB_NAME
@@ -208,7 +209,7 @@ jobs:
       <<: *common-params
 
 common-params: &common-params
-  APP_NAME: ((app-name))
+  APP_NAME: ((cf-app-name))
   CF_USERNAME: ((cf-username))
   CF_API: ((cf-api))
   CF_ORG: ((cf-org))
