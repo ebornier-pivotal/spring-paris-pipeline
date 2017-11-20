@@ -11,7 +11,7 @@ applications:
 - name: ${APP_NAME} 
   host: ${APP_NAME}
   memory: 1G
-  instances: 1
+  instances: 3
   services:
     - ${APP_NAME}-metrics
 EOF
