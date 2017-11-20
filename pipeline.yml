@@ -170,6 +170,7 @@ jobs:
     params:
       channel: '#spring-paris-demo'
       text: |
+        ***************************************
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
         The application is now available in Test - $BUILD_JOB_NAME
@@ -198,6 +199,7 @@ jobs:
     params:
       channel: '#spring-paris-demo'
       text: |
+        ***************************************
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
         The application is now available in Stage - $BUILD_JOB_NAME
@@ -226,6 +228,7 @@ jobs:
     params:
       channel: '#spring-paris-demo'
       text: |
+        ***************************************
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
         The application is now available in Prod - $BUILD_JOB_NAME
