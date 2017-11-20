@@ -12,6 +12,8 @@ applications:
   host: ${APP_NAME}
   memory: 1G
   instances: 1
+  services:
+    - ${APP_NAME}-metrics
 EOF
 
 mv manifest.yml ../build/
