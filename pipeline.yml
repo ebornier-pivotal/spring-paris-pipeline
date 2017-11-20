@@ -56,7 +56,7 @@ resources:
   type: github-release
   source:
     user: ((git-user))
-    access_token: ((access-token))
+    access_token: ((git-access-token))
     check: true
     repository: ((app-repository))
     include_source_tarball: true
@@ -67,7 +67,7 @@ resources:
   type: github-release
   source:
     user: ((git-user))
-    access_token: ((access-token))
+    access_token: ((git-access-token))
     check: true
     repository: ((app-repository))
     include_source_tarball: true
@@ -149,7 +149,7 @@ jobs:
   - task: build
     file: tools/scripts/analyze.yml
 
-- name: deploy-to-test
+- name: deploy-((app-name))-to-test
   serial: true
   public: true # cf does not shows auth. logs so it is ok
   plan:
@@ -166,25 +166,15 @@ jobs:
       manifest: build/manifest.yml
       current_app_name: ((app-name))
       path: build/app.jar
-  - task: generate-slack-message
-    config:
-      platform: linux
-      image_resource:
-        type: docker-image
-        source:
-          repository: java
-          tag: 8
-      run:
-        path: "echo toto > /generate-slack-message/message.txt"
   - put: slack-alert
     params:
       channel: '#spring-paris-demo'
       text: |
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
-        The application is now available in Test
+        The application is now available in Test - $BUILD_JOB_NAME
 
-- name: deploy-to-stage
+- name: deploy-((app-name))-to-stage
   public: true
   serial: true
   plan:
@@ -220,9 +210,9 @@ jobs:
       text: |
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
-        The application is now available in Stage
+        The application is now available in Stage - $BUILD_JOB_NAME
 
-- name: deploy-to-prod
+- name: deploy-((app-name))-to-prod
   public: true
   serial: true
   plan:
@@ -248,7 +238,7 @@ jobs:
       text: |
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
-        The application is now available in Prod
+        The application is now available in Prod - $BUILD_JOB_NAME
 
 
 common-params: &common-params
