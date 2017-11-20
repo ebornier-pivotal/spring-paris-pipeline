@@ -7,7 +7,6 @@ image_resource:
     repository: maven 
 
 inputs:
-- name: repo
 - name: pre-release
 - name: tools
 outputs:
