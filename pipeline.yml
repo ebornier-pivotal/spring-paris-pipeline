@@ -207,7 +207,7 @@ jobs:
 
 common-params: &common-params
   APP_NAME: ((app-name))
-  CF_USER: ((cf-username))
+  CF_USERNAME: ((cf-username))
   CF_API: ((cf-api))
   CF_ORG: ((cf-org))
   CF_PASSWORD: ((cf-password))
