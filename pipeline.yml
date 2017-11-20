@@ -238,10 +238,7 @@ jobs:
   serial: true
   plan:
   - get: tools
-    trigger: true
     passed: [  deploy-((app-name))-to-prod  ]
-    params:
-      include_source_tarball: true
   - task: build
     file: tools/scripts/create-services.yml
     params:
