@@ -9,6 +9,10 @@ resource_types:
 
 resources:
 
+- name: 5s
+  type: time
+  source: {interval: 5s}
+
 - name: repo
   type: git
   source:
@@ -82,6 +86,20 @@ resources:
 
 jobs:
 
+
+- name: rollback-if-failure
+  serial: true
+  public: true # cf does not shows auth. logs so it is ok
+  plan:
+  - get: 5s
+    trigger: true
+  - get: tools
+  - task: check-actuator
+    file: tools/scripts/check_actuator.yml
+    on_failure:
+      task: rollback
+      file: tools/scripts/analyze.yml
+
 - name: analyze-source-code
   serial: true
   public: true # cf does not shows auth. logs so it is ok
@@ -128,7 +146,7 @@ jobs:
         The build had a result. Check it out at:
         https://a-concourse2-630322659.eu-west-1.elb.amazonaws.com//builds/$BUILD_ID
         The application is now available in Test - $BUILD_JOB_NAME
-        
+
 - name: deploy-((cf-app-name))-to-stage
   public: true
   serial: true
