@@ -4,7 +4,7 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: fr3nd/jq
+    repository: realguess/jq
 
 inputs:
 - name: tools 
