@@ -91,6 +91,7 @@ jobs:
   serial: true
   public: true # cf does not shows auth. logs so it is ok
   plan:
+  - get: repo
   - get: 5s
     trigger: true
   - get: tools
