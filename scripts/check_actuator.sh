@@ -2,7 +2,7 @@
 
 echo "Performed source code analysis" 
 
-apt-get install curl
+apk update && apk-install jq
 
 metric=`curl http://spring-boot-paris.cfapps.alex.examples.cf/metrics | jq -r '.["counter.spring.paris.attendees.view"]'`
 echo $metric
