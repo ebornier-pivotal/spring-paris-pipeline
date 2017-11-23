@@ -17,7 +17,7 @@ applications:
   services:
     - ${APP_NAME}-metrics
   env:
-    - "${version}"
+    version: ${version}
 EOF
 
 cat manifest.yml
