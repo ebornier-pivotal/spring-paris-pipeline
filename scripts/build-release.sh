@@ -5,6 +5,8 @@ tar xvf source.tar.gz --strip 1
 export
 mvn clean package -Dmaven.test.skip=true
 
+version=`cat tag`
+
 cat << EOF > manifest.yml
 ---
 applications:
@@ -14,6 +16,8 @@ applications:
   instances: 3
   services:
     - ${APP_NAME}-metrics
+  env:
+    - ${version}
 EOF
 
 mv manifest.yml ../build/

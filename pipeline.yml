@@ -11,7 +11,7 @@ resources:
 
 - name: 5s
   type: time
-  source: {interval: 5s}
+  source: {interval: 60m}
 
 - name: repo
   type: git
@@ -99,7 +99,7 @@ jobs:
     file: tools/scripts/check_actuator.yml
     on_failure:
       task: rollback
-      file: tools/scripts/analyze.yml
+      file: tools/scripts/build.yml
 
 - name: analyze-source-code
   serial: true
