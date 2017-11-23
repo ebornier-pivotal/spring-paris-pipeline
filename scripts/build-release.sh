@@ -20,5 +20,8 @@ applications:
     - "${version}"
 EOF
 
+cat manifest.yml
+
+
 mv manifest.yml ../build/
 mv `ls target/*jar` ../build/app.jar
