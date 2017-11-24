@@ -12,6 +12,8 @@ curl -O  $tarball_url -k
 
 mv "V1.0.0" release.tar.gz
 
+tar xvf release.tar.gz
+
 mv release.tar.gz previous-version/
 
 

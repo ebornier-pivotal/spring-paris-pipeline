@@ -6,6 +6,7 @@ tar xvf release.tar.gz --strip 1
 export
 mvn clean package -Dmaven.test.skip=true
 
+
 cat << EOF > manifest.yml
 ---
 applications:
