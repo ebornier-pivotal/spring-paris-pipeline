@@ -9,7 +9,7 @@ image_resource:
 inputs:
 - name: tools 
 outputs:
-- name: build 
+- name: check-actuator 
 
 run:
   path: tools/scripts/check_actuator.sh 
