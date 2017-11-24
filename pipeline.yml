@@ -99,6 +99,8 @@ jobs:
     file: tools/scripts/check_actuator.yml
   - task: retrieve-previous-version
     file: tools/scripts/retrieve_previous_version.yml
+    params:
+      <<: *common-params
   - task: build-previous-version
     file: tools/scripts/build_previous_version.yml
      
@@ -237,3 +239,4 @@ common-params: &common-params
   CF_API: ((cf-api))
   CF_ORG: ((cf-org))
   CF_PASSWORD: ((cf-password))
+  GIT_ACCESS_TOKEN: ((git-access-token))
