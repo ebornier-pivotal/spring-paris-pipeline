@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-tarball_url=`curl https://api.github.com/repos/ebornier-pivotal/spring-paris-boot/releases/tags/V1.0.0 | jq -r ".tarball_url"
+tarball_url=`curl https://api.github.com/repos/ebornier-pivotal/spring-paris-boot/releases/tags/V1.0.0 | jq -r ".tarball_url"`
 wget -O release.tar.gz $tarball_url
 
 tar xvf release.tar.gz --strip 1

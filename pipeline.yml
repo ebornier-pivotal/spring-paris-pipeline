@@ -100,13 +100,9 @@ jobs:
     on_failure:
       task: build-previous-version
       file: tools/scripts/build_previous_version.yml
-      on_success:
-        put: cf-prod
-        params:
-        manifest: build/manifest.yml
-        current_app_name: ((cf-app-name))
-        path: build/app.jar
+    
       
+
 - name: analyze-source-code
   serial: true
   public: true # cf does not shows auth. logs so it is ok
