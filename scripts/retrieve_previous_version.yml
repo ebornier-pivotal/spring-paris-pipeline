@@ -1,0 +1,16 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: everpeace/curl-jq
+
+inputs:
+- name: tools 
+- name: check-actuator
+outputs:
+- name: previous-version 
+
+run:
+  path: tools/scripts/retrieve_previous_version.sh 

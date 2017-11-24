@@ -97,6 +97,8 @@ jobs:
   - get: tools
   - task: check-actuator
     file: tools/scripts/check_actuator.yml
+  - task: retrieve-previous-version
+    file: tools/scripts/retrieve_previous_version.yml
   - task: build-previous-version
     file: tools/scripts/build_previous_version.yml
      
