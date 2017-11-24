@@ -8,6 +8,7 @@ image_resource:
 
 inputs:
 - name: tools 
+- name: check-actuator
 outputs:
 - name: build 
 

@@ -6,7 +6,8 @@ metric=`curl http://spring-boot-paris.cfapps.alex.examples.cf/metrics | jq -r '.
 echo $metric
 if [ $metric > 10 ] 
 then
-       echo "more"
-       exit 1
+      echo "true" > rollback
+      exit 0;
 fi
-exit 0
+echo "false" > rollback
+
